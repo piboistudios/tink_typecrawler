@@ -20,11 +20,13 @@ class Crawler {
   var ret:Array<Field> = [];
   var gen:Generator;
   var cacheSize = 0;
+  var mkRet:ComplexType->ComplexType;
   var cache = new tink.macro.TypeMap<Expr>(function (t) return t);
 
-  static public function crawl(type:Type, pos:Position, gen:GeneratorProvider) {
-    var c = new Crawler(gen);
-
+  static public function crawl(type:Type, pos:Position, gen:GeneratorProvider, ?mkRet) {
+    if(mkRet == null) mkRet = function(ct) return ct;
+    var c = new Crawler(gen, mkRet);
+    
     var expr = c.genType(type, pos);
 
     return {
@@ -39,7 +41,7 @@ class Crawler {
     return td.fields;
   }
 
-  public function cached(t:Type, pos:Position, make:Int->Expr, ?mkRet:ComplexType->ComplexType)
+  public function cached(t:Type, pos:Position, make:Int->Expr)
     return switch cache.get(t) {
       case null:
         var id = cacheSize++;
@@ -71,8 +73,9 @@ class Crawler {
 
   var methodCalls = new Map<String, Expr>();
 
-  function new(gen:GeneratorProvider) {
+  function new(gen:GeneratorProvider, ?mkRet) {
     this.gen = gen(this);
+    this.mkRet = mkRet;
   }
 
   function genType(t:Type, pos:Position):Expr
