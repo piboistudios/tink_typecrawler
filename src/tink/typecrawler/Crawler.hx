@@ -39,7 +39,7 @@ class Crawler {
     return td.fields;
   }
 
-  public function cached(t:Type, pos:Position, make:Int->Expr)
+  public function cached(t:Type, pos:Position, make:Int->Expr, ?mkRet:ComplexType->ComplexType)
     return switch cache.get(t) {
       case null:
         var id = cacheSize++;
@@ -48,7 +48,7 @@ class Crawler {
         var placeholder = macro @:pos(pos) null;
 
         var ct = t.toComplex();
-        var func = gen.wrap(placeholder, t.toComplex());
+        var func = gen.wrap(placeholder, mkRet(t.toComplex()));
         var args = [for (a in func.args) a.name.resolve()];
 
         var call = macro @:pos(pos) this.$method($a{args});
